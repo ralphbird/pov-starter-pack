@@ -8,6 +8,10 @@ terraform {
       source  = "hashicorp/http"
       version = ">= 3.0.0"
     }
+    slack = {
+      source  = "jmatisa/slack"
+      version = ">= 0.0.1, < 1.0.0"
+    }
   }
 }
 
@@ -15,6 +19,11 @@ provider "pagerduty" {
   # If empty, provider will use env var PAGERDUTY_TOKEN
   token            = var.pagerduty_token != "" ? var.pagerduty_token : null
   api_url_override = var.pagerduty_api_url_override != "" ? var.pagerduty_api_url_override : null
+}
+
+provider "slack" {
+  # Token is set to "unused" when Slack is disabled to avoid provider validation errors.
+  token = var.enable_slack ? var.slack_token : "unused"
 }
 
 ########################################
@@ -42,6 +51,11 @@ locals {
         "\\", "-"),
       "<", "-"),
     ">", "-")
+  }
+
+  team_slack_channel_name = {
+    for code, name in local.team_catalog :
+    code => "incidents-${lower(replace(replace(name, " & ", "-and-"), " ", "-"))}"
   }
 
   business_services = [
@@ -590,6 +604,10 @@ resource "pagerduty_service_custom_field" "environment" {
     data_type = "string"
     value     = "sandbox"
   }
+  field_option {
+    data_type = "string"
+    value     = "staging"
+  }
 }
 
 data "pagerduty_service_custom_field" "criticality" {
@@ -679,7 +697,7 @@ locals {
     )
   }
 
-  default_environment = "prod"
+  default_environment = strcontains(var.pagerduty_api_url_override, "staging") ? "staging" : "prod"
   environment_by_service_ts = {
     for name in keys(local.technical_services) :
     name => local.default_environment
@@ -707,4 +725,15 @@ resource "pagerduty_service_custom_field_value" "assignments" {
       value = jsonencode(local.environment_by_service_ts[each.key])
     },
   ]
+}
+
+############################
+# Slack Integration (Optional)
+############################
+
+resource "slack_conversation" "team" {
+  for_each          = var.enable_slack ? local.team_catalog : {}
+  name              = local.team_slack_channel_name[each.key]
+  is_private        = false
+  action_on_destroy = "archive"
 }
