@@ -18,6 +18,7 @@ terraform {
 provider "pagerduty" {
   # If empty, provider will use env var PAGERDUTY_TOKEN
   token            = var.pagerduty_token != "" ? var.pagerduty_token : null
+  user_token       = var.pagerduty_user_token != "" ? var.pagerduty_user_token : null
   api_url_override = var.pagerduty_api_url_override != "" ? var.pagerduty_api_url_override : null
 }
 
@@ -738,23 +739,3 @@ resource "slack_conversation" "team" {
   action_on_destroy = "none"
 }
 
-resource "pagerduty_slack_connection" "team" {
-  for_each          = var.enable_slack ? local.team_catalog : {}
-  source_id         = pagerduty_team.team[each.key].id
-  source_type       = "team_reference"
-  workspace_id      = var.slack_workspace_id
-  channel_id        = slack_conversation.team[each.key].id
-  notification_type = "responder"
-
-  config {
-    events = [
-      "incident.triggered",
-      "incident.acknowledged",
-      "incident.escalated",
-      "incident.resolved",
-      "incident.reassigned",
-      "incident.annotated",
-      "incident.unacknowledged",
-    ]
-  }
-}

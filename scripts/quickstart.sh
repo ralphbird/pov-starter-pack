@@ -68,6 +68,18 @@ if [[ "$SLACK_ENABLED" == "true" ]]; then
     export SLACK_WORKSPACE_ID="$slack_workspace_id"
   fi
   export TF_VAR_slack_workspace_id="$SLACK_WORKSPACE_ID"
+
+  if [[ -z "${PAGERDUTY_USER_TOKEN:-}" ]]; then
+    echo "Please enter your PagerDuty User Token (Profile -> API Access -> User Token)."
+    read -rsp "PagerDuty User Token: " PAGERDUTY_USER_TOKEN
+    echo
+    if [[ -z "$PAGERDUTY_USER_TOKEN" ]]; then
+      echo "Error: PagerDuty User Token required for Slack connections." >&2
+      exit 1
+    fi
+    export PAGERDUTY_USER_TOKEN="$PAGERDUTY_USER_TOKEN"
+  fi
+  export TF_VAR_pagerduty_user_token="$PAGERDUTY_USER_TOKEN"
   export TF_VAR_enable_slack="true"
 else
   export TF_VAR_enable_slack="false"
@@ -101,6 +113,7 @@ elif [[ "$PD_REGION" == "STAGING" ]]; then
 else
   API_BASE_URL="https://api.pagerduty.com"
 fi
+export PD_REGION
 export TF_VAR_pagerduty_api_url_override="$API_BASE_URL"
 
 # --- 3. Domain Check ---
@@ -137,10 +150,10 @@ terraform init -upgrade -input=false >/dev/null
 if [[ "$MODE" == "destroy" ]]; then
   echo
   echo "Fetching available POV workspaces..."
-  
+
   # Get list of workspaces, filter for 'pov-', strip '*', remove empty lines
   raw_list=$(terraform workspace list | grep "pov-" | sed 's/[*[:space:]]//g')
-  
+
   # Convert to array
   workspaces=()
   while IFS= read -r line; do
@@ -174,13 +187,13 @@ if [[ "$MODE" == "destroy" ]]; then
 
   # Map selection to actual workspace name
   WORKSPACE="${workspaces[$((selection-1))]}"
-  
+
   # Confirm
   echo
   echo "WARNING: You are about to DESTROY the OrbitPay POV for: $WORKSPACE"
   echo "This action cannot be undone."
   read -r -p "Type 'yes' to confirm destruction: " confirm
-  
+
   if [[ "$confirm" != "yes" ]]; then
     echo "Aborted."
     exit 0
@@ -192,9 +205,14 @@ if [[ "$MODE" == "destroy" ]]; then
     exit 1
   fi
 
+  # Remove Slack connections before destroy (not managed by Terraform)
+  if [[ "${TF_VAR_enable_slack:-false}" == "true" ]]; then
+    echo "-> Removing Slack connections..."
+    bash "$(dirname "$0")/create-slack-connections.sh" --destroy
+  fi
+
   # Execute Destroy
   echo "-> Destroying Resources..."
-  # Pass dummy email if needed via env var, but logic in main.tf should handle null now.
   terraform destroy -auto-approve
 
   echo "-> Removing Workspace..."
@@ -225,9 +243,17 @@ fi
 export TF_VAR_pov_user_email="$POV_USER_EMAIL"
 
 # Customer Name
-echo
-echo "Enter Customer Name for this POV (e.g. 'Acme Corp'):"
-read -r customer_name
+if [[ -z "${POV_CUSTOMER_NAME:-}" ]]; then
+  echo
+  echo "Enter Customer Name for this POV (e.g. 'Acme Corp'):"
+  read -r customer_name
+  if [[ -z "$customer_name" ]]; then
+    echo "Error: Customer name required." >&2
+    exit 1
+  fi
+else
+  customer_name="$POV_CUSTOMER_NAME"
+fi
 # Sanitize
 safe_name=$(echo "$customer_name" | tr '[:upper:]' '[:lower:]' | tr -s ' ' '-' | sed 's/[^a-z0-9-]//g')
 # Prevent double prefixing
@@ -251,6 +277,13 @@ echo "This will create teams, services, and schedules for $POV_USER_EMAIL."
 read -p "Press Enter to continue..."
 
 terraform apply -auto-approve
+
+# Create Slack connections via API (supports all regions including Staging)
+if [[ "${TF_VAR_enable_slack:-false}" == "true" ]]; then
+  echo
+  echo "-> Creating Slack connections..."
+  bash "$(dirname "$0")/create-slack-connections.sh"
+fi
 
 echo
 echo "========================================"

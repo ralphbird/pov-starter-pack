@@ -12,12 +12,14 @@ CI  | Core Infrastructure
 ## Technical Services (POV)
 
 ### Payments Platform (PP)
+
 - Payments API Gateway
 - Payments Orchestrator (sync)
 - Payments Rules Engine
 - Idempotency Token Service
 
 ### Wallet & Ledgers (WL)
+
 - Payments Ledger DB Cluster
 - Wallet API
 - Balance Manager
@@ -25,6 +27,7 @@ CI  | Core Infrastructure
 - Ledger DB Cluster (wallet)
 
 ### Customer Experience (CX)
+
 - Profile Service
 - Web Frontend (SSR)
 - Mobile API BFF
@@ -35,6 +38,7 @@ CI  | Core Infrastructure
 - Preferences Service
 
 ### Core Infrastructure (CI)
+
 - Service Mesh / mTLS
 - Edge WAF/CDN
 - Secrets Manager
@@ -44,9 +48,11 @@ CI  | Core Infrastructure
 ## Business Services and Dependencies
 
 Each business service maps to technical services with a dependency layer:
+
 - L1 = direct, L2 = supporting, L3 = foundational
 
 ### Payments API
+
 - Idempotency Token Service (L1)
 - Payments API Gateway (L1)
 - Payments Orchestrator (sync) (L1)
@@ -56,6 +62,7 @@ Each business service maps to technical services with a dependency layer:
 - Service Mesh / mTLS (L3)
 
 ### Digital Wallet
+
 - Balance Manager (L1)
 - Funding Source Linker (L1)
 - Wallet API (L1)
@@ -64,6 +71,7 @@ Each business service maps to technical services with a dependency layer:
 - Secrets Manager (L3)
 
 ### Customer Experience Portal
+
 - Mobile API BFF (L1)
 - Notification Service (L1)
 - Web Frontend (SSR) (L1)
@@ -73,9 +81,11 @@ Each business service maps to technical services with a dependency layer:
 - Push Gateway (L3)
 
 ### Account Management
+
 - Profile API (L1)
 - Preferences Service (L2)
 
 ## Source of Truth
+
 - Terraform locals in `main.tf`
 - Outputs in `outputs.tf`

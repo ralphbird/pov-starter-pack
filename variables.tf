@@ -84,3 +84,10 @@ variable "slack_workspace_id" {
   type        = string
   default     = ""
 }
+
+variable "pagerduty_user_token" {
+  description = "PagerDuty personal REST API key (Profile → User Settings → API Access). Required for Slack connections."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
