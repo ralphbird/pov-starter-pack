@@ -10,7 +10,7 @@ terraform {
     }
     slack = {
       source  = "jmatisa/slack"
-      version = ">= 0.0.1, < 1.0.0"
+      version = "~> 0.0"
     }
   }
 }
@@ -735,5 +735,5 @@ resource "slack_conversation" "team" {
   for_each          = var.enable_slack ? local.team_catalog : {}
   name              = local.team_slack_channel_name[each.key]
   is_private        = false
-  action_on_destroy = "archive"
+  action_on_destroy = "none"
 }
