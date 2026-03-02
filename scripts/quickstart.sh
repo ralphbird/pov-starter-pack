@@ -277,6 +277,11 @@ echo "Ready to provision OrbitPay POV for '$customer_name'."
 echo "This will create teams, services, and schedules for $POV_USER_EMAIL."
 read -p "Press Enter to continue..."
 
+if [[ "${TF_VAR_enable_slack:-false}" == "true" ]]; then
+  echo "-> Checking for existing Slack channels to import..."
+  bash "$(dirname "$0")/import-slack-channels.sh"
+fi
+
 terraform apply -auto-approve
 
 # Create Slack connections via API (supports all regions including Staging)
