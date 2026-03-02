@@ -37,3 +37,8 @@ output "global_orchestration_routing_key" {
   value       = pagerduty_event_orchestration_integration.global.parameters[0].routing_key
   sensitive   = true
 }
+
+output "slack_channel_ids" {
+  description = "Slack channel IDs by team code (only populated when enable_slack = true)"
+  value       = { for k, v in slack_conversation.team : k => v.id }
+}
