@@ -737,3 +737,24 @@ resource "slack_conversation" "team" {
   is_private        = false
   action_on_destroy = "none"
 }
+
+resource "pagerduty_slack_connection" "team" {
+  for_each          = var.enable_slack ? local.team_catalog : {}
+  src_id            = pagerduty_team.team[each.key].id
+  src_type          = "team_reference"
+  workspace_id      = var.slack_workspace_id
+  channel_id        = slack_conversation.team[each.key].id
+  notification_type = "responder"
+
+  config {
+    events = [
+      "incident.triggered",
+      "incident.acknowledged",
+      "incident.escalated",
+      "incident.resolved",
+      "incident.reassigned",
+      "incident.annotated",
+      "incident.unacknowledged",
+    ]
+  }
+}
