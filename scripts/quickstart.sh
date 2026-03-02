@@ -60,7 +60,7 @@ if [[ "$SLACK_ENABLED" == "true" ]]; then
   if [[ -z "${SLACK_WORKSPACE_ID:-}" ]]; then
     echo "Enter your Slack Workspace ID (T... format)."
     echo "  Found in: PagerDuty -> Integrations -> Slack"
-    read -r slack_workspace_id
+    read -r -p "Slack Workspace ID: " slack_workspace_id
     if [[ -z "$slack_workspace_id" ]]; then
       echo "Error: Slack workspace ID required when Slack is enabled." >&2
       exit 1
