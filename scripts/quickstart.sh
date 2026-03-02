@@ -67,7 +67,6 @@ if [[ "$SLACK_ENABLED" == "true" ]]; then
     fi
     export SLACK_WORKSPACE_ID="$slack_workspace_id"
   fi
-  export TF_VAR_slack_workspace_id="$SLACK_WORKSPACE_ID"
 
   if [[ -z "${PAGERDUTY_USER_TOKEN:-}" ]]; then
     echo "Please enter your PagerDuty User Token (Profile -> API Access -> User Token)."
@@ -205,7 +204,9 @@ if [[ "$MODE" == "destroy" ]]; then
     exit 1
   fi
 
-  # Remove Slack connections before destroy (not managed by Terraform)
+  # Remove Slack connections before destroy (not managed by Terraform).
+  # PD_REGION is set above from the region prompt; if running in a fresh shell,
+  # set PD_REGION=EU or PD_REGION=STAGING before running --destroy for non-US accounts.
   if [[ "${TF_VAR_enable_slack:-false}" == "true" ]]; then
     echo "-> Removing Slack connections..."
     bash "$(dirname "$0")/create-slack-connections.sh" --destroy

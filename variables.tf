@@ -79,12 +79,6 @@ variable "slack_token" {
   sensitive   = true
 }
 
-variable "slack_workspace_id" {
-  description = "Slack workspace ID (T... format). Found in PagerDuty → Integrations → Slack."
-  type        = string
-  default     = ""
-}
-
 variable "pagerduty_user_token" {
   description = "PagerDuty personal REST API key (Profile → User Settings → API Access). Required for Slack connections."
   type        = string

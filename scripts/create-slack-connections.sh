@@ -164,7 +164,7 @@ for code in $teams; do
         --argjson events "$EVENTS_JSON" \
         '{slack_connection: {source_id: $src, source_type: "team_reference", workspace_id: $ws, channel_id: $ch, notification_type: "responder", config: {events: $events, priorities: null, urgency: null}}}')
 
-      echo "           Payload: $payload"
+      [[ "${DEBUG:-}" == "1" ]] && echo "           Payload: $payload"
       pd_curl POST "$CONNECTIONS_URL" -H "Content-Type: application/json" -d "$payload"
       echo "           HTTP $CURL_STATUS"
 

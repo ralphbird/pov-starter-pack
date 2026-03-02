@@ -10,7 +10,7 @@ terraform {
     }
     slack = {
       source  = "pablovarela/slack"
-      version = "~> 1.0"
+      version = "~> 1.2"
     }
   }
 }
@@ -18,7 +18,6 @@ terraform {
 provider "pagerduty" {
   # If empty, provider will use env var PAGERDUTY_TOKEN
   token            = var.pagerduty_token != "" ? var.pagerduty_token : null
-  user_token       = var.pagerduty_user_token != "" ? var.pagerduty_user_token : null
   api_url_override = var.pagerduty_api_url_override != "" ? var.pagerduty_api_url_override : null
 }
 

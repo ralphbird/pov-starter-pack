@@ -63,6 +63,7 @@ It creates a fully functional PagerDuty configuration for the OrbitPay simulated
 * 4x Incident channels (`incidents-payments-platform`, `incidents-wallet-and-ledgers`, `incidents-customer-experience`, `incidents-core-infrastructure`)
 * PagerDuty team-reference connections (all incident lifecycle events)
 * Requires a [Slack bot token](https://docs.slack.dev/app-management/quickstart-app-settings) with `channels:write` scope and the Slack Workspace ID.
+* PagerDuty connections are managed via a helper script rather than Terraform because the `pagerduty_slack_connection` provider resource hardcodes `app.pagerduty.com` and ignores `api_url_override`, which breaks staging environments.
 
 ## 🧹 Tear Down
 
