@@ -31,6 +31,8 @@ fi
 export TF_VAR_pagerduty_token="$PAGERDUTY_TOKEN"
 
 # --- Slack Integration (Optional) ---
+# Allow TF_VAR_enable_slack as an alternative way to pre-set Slack mode.
+[[ -z "${SLACK_ENABLED:-}" && "${TF_VAR_enable_slack:-}" == "true" ]] && SLACK_ENABLED="true"
 if [[ -z "${SLACK_ENABLED:-}" ]]; then
   echo
   read -r -p "Enable Slack integration? (y/N): " slack_choice
@@ -78,7 +80,6 @@ if [[ "$SLACK_ENABLED" == "true" ]]; then
     fi
     export PAGERDUTY_USER_TOKEN="$PAGERDUTY_USER_TOKEN"
   fi
-  export TF_VAR_pagerduty_user_token="$PAGERDUTY_USER_TOKEN"
   export TF_VAR_enable_slack="true"
 else
   export TF_VAR_enable_slack="false"
@@ -205,9 +206,28 @@ if [[ "$MODE" == "destroy" ]]; then
   fi
 
   # Remove Slack connections before destroy (not managed by Terraform).
-  # PD_REGION is set above from the region prompt; if running in a fresh shell,
-  # set PD_REGION=EU or PD_REGION=STAGING before running --destroy for non-US accounts.
-  if [[ "${TF_VAR_enable_slack:-false}" == "true" ]]; then
+  # Detect from Terraform state whether Slack was active for this workspace so
+  # this works correctly in a fresh shell without TF_VAR_enable_slack set.
+  slack_ch_ids=$(terraform output -json slack_channel_ids 2>/dev/null || echo "{}")
+  if [[ "$slack_ch_ids" != "{}" && "$slack_ch_ids" != "null" && -n "$slack_ch_ids" ]]; then
+    echo "-> Slack connections detected. Collecting credentials for cleanup..."
+    if [[ -z "${PAGERDUTY_USER_TOKEN:-}" ]]; then
+      read -rsp "PagerDuty User Token (Profile -> API Access -> User Token): " PAGERDUTY_USER_TOKEN
+      echo
+      if [[ -z "$PAGERDUTY_USER_TOKEN" ]]; then
+        echo "Error: PagerDuty User Token required for Slack connection cleanup." >&2
+        exit 1
+      fi
+      export PAGERDUTY_USER_TOKEN
+    fi
+    if [[ -z "${SLACK_WORKSPACE_ID:-}" ]]; then
+      read -r -p "Slack Workspace ID (T... format): " SLACK_WORKSPACE_ID
+      if [[ -z "$SLACK_WORKSPACE_ID" ]]; then
+        echo "Error: Slack Workspace ID required for Slack connection cleanup." >&2
+        exit 1
+      fi
+      export SLACK_WORKSPACE_ID
+    fi
     echo "-> Removing Slack connections..."
     bash "$(dirname "$0")/create-slack-connections.sh" --destroy
   fi

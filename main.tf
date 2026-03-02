@@ -737,4 +737,3 @@ resource "slack_conversation" "team" {
   is_private        = false
   action_on_destroy = "none"
 }
-
