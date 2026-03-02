@@ -30,16 +30,63 @@ if [[ -z "${PAGERDUTY_TOKEN:-}" ]]; then
 fi
 export TF_VAR_pagerduty_token="$PAGERDUTY_TOKEN"
 
+# --- Slack Integration (Optional) ---
+if [[ -z "${SLACK_ENABLED:-}" ]]; then
+  echo
+  read -r -p "Enable Slack integration? (y/N): " slack_choice
+  case "$slack_choice" in
+    y|Y|yes|YES)
+      SLACK_ENABLED="true"
+      ;;
+    *)
+      SLACK_ENABLED="false"
+      ;;
+  esac
+fi
+
+if [[ "$SLACK_ENABLED" == "true" ]]; then
+  if [[ -z "${SLACK_TOKEN:-}" ]]; then
+    echo "Please enter your Slack Bot Token (xoxb-...)."
+    read -rsp "Slack Token: " slack_token
+    echo
+    if [[ -z "$slack_token" ]]; then
+      echo "Error: Slack token required when Slack is enabled." >&2
+      exit 1
+    fi
+    export SLACK_TOKEN="$slack_token"
+  fi
+  export TF_VAR_slack_token="$SLACK_TOKEN"
+
+  if [[ -z "${SLACK_WORKSPACE_ID:-}" ]]; then
+    echo "Enter your Slack Workspace ID (T... format)."
+    echo "  Found in: PagerDuty -> Integrations -> Slack"
+    read -r slack_workspace_id
+    if [[ -z "$slack_workspace_id" ]]; then
+      echo "Error: Slack workspace ID required when Slack is enabled." >&2
+      exit 1
+    fi
+    export SLACK_WORKSPACE_ID="$slack_workspace_id"
+  fi
+  export TF_VAR_slack_workspace_id="$SLACK_WORKSPACE_ID"
+  export TF_VAR_enable_slack="true"
+else
+  export TF_VAR_enable_slack="false"
+fi
+
 # --- 2. Region Selection ---
 if [[ -z "${PD_REGION:-}" ]]; then
   echo
   echo "Select PagerDuty Region:"
   echo "  1) US (default)"
   echo "  2) EU"
-  read -r -p "Enter 1 or 2: " region_choice
+  echo "  3) Staging"
+  read -r -p "Enter 1, 2, or 3: " region_choice
   case "$region_choice" in
     2|EU|eu)
       PD_REGION="EU"
+      ;;
+    3|STAGING|staging)
+      PD_REGION="STAGING"
       ;;
     *)
       PD_REGION="US"
@@ -49,6 +96,8 @@ fi
 
 if [[ "$PD_REGION" == "EU" ]]; then
   API_BASE_URL="https://api.eu.pagerduty.com"
+elif [[ "$PD_REGION" == "STAGING" ]]; then
+  API_BASE_URL="https://api.pd-staging.com"
 else
   API_BASE_URL="https://api.pagerduty.com"
 fi
