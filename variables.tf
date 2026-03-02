@@ -65,3 +65,22 @@ variable "enable_scf_assignments" {
   type        = bool
   default     = true
 }
+
+variable "enable_slack" {
+  description = "If true, create Slack channels and PagerDuty Slack connections for each team."
+  type        = bool
+  default     = false
+}
+
+variable "slack_token" {
+  description = "Slack bot token (xoxb-...) with channels:write and channels:read scopes."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "slack_workspace_id" {
+  description = "Slack workspace ID (T... format). Found in PagerDuty → Integrations → Slack."
+  type        = string
+  default     = ""
+}
