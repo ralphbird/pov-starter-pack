@@ -9,8 +9,8 @@ terraform {
       version = ">= 3.0.0"
     }
     slack = {
-      source  = "jmatisa/slack"
-      version = "~> 0.0"
+      source  = "pablovarela/slack"
+      version = "~> 1.0"
     }
   }
 }
