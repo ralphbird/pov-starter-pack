@@ -113,9 +113,9 @@ if [[ "$GRAFANA_ENABLED" == "true" ]]; then
   fi
 
   if [[ -z "${GRAFANA_TOKEN:-}" ]]; then
-    echo "Enter your Grafana Cloud service account token."
-    echo "  Create one at: grafana.com -> your stack -> Security -> Service accounts"
-    echo "  Required scopes: alerting:write, datasources:read, folders:creator"
+    echo "Enter your Grafana instance service account token (Admin role required)."
+    echo "  Create one at: your Grafana stack -> Administration -> Users and access -> Service accounts"
+    echo "  Role: Admin (not a Grafana Cloud access policy token)"
     read -rsp "Grafana Token: " GRAFANA_TOKEN
     echo
     if [[ -z "$GRAFANA_TOKEN" ]]; then
