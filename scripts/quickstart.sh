@@ -125,9 +125,49 @@ if [[ "$GRAFANA_ENABLED" == "true" ]]; then
     export GRAFANA_TOKEN
   fi
 
+  # Auto-detect datasource names from the Grafana API (avoids hardcoding stack-specific names).
+  # Falls back to prompting if the API call fails or returns no match.
+  if [[ -z "${GRAFANA_LOKI_DS_NAME:-}" ]]; then
+    GRAFANA_LOKI_DS_NAME=$(curl -sf \
+      -H "Authorization: Bearer $GRAFANA_TOKEN" \
+      "${GRAFANA_URL%/}/api/datasources" 2>/dev/null \
+      | jq -r '[.[] | select(.type == "loki")] | first | .name // empty' 2>/dev/null || true)
+    if [[ -z "$GRAFANA_LOKI_DS_NAME" ]]; then
+      echo "Could not auto-detect Loki datasource name."
+      echo "  Find it in Grafana -> Connections -> Data sources."
+      read -r -p "Loki datasource name: " GRAFANA_LOKI_DS_NAME
+      if [[ -z "$GRAFANA_LOKI_DS_NAME" ]]; then
+        echo "Error: Loki datasource name required." >&2
+        exit 1
+      fi
+    else
+      echo "  Loki datasource: $GRAFANA_LOKI_DS_NAME"
+    fi
+  fi
+
+  if [[ -z "${GRAFANA_PROMETHEUS_DS_NAME:-}" ]]; then
+    GRAFANA_PROMETHEUS_DS_NAME=$(curl -sf \
+      -H "Authorization: Bearer $GRAFANA_TOKEN" \
+      "${GRAFANA_URL%/}/api/datasources" 2>/dev/null \
+      | jq -r '[.[] | select(.type == "prometheus")] | first | .name // empty' 2>/dev/null || true)
+    if [[ -z "$GRAFANA_PROMETHEUS_DS_NAME" ]]; then
+      echo "Could not auto-detect Prometheus datasource name."
+      echo "  Find it in Grafana -> Connections -> Data sources."
+      read -r -p "Prometheus datasource name: " GRAFANA_PROMETHEUS_DS_NAME
+      if [[ -z "$GRAFANA_PROMETHEUS_DS_NAME" ]]; then
+        echo "Error: Prometheus datasource name required." >&2
+        exit 1
+      fi
+    else
+      echo "  Prometheus datasource: $GRAFANA_PROMETHEUS_DS_NAME"
+    fi
+  fi
+
   export TF_VAR_enable_grafana="true"
   export TF_VAR_grafana_url="$GRAFANA_URL"
   export TF_VAR_grafana_token="$GRAFANA_TOKEN"
+  export TF_VAR_grafana_loki_ds_name="$GRAFANA_LOKI_DS_NAME"
+  export TF_VAR_grafana_prometheus_ds_name="$GRAFANA_PROMETHEUS_DS_NAME"
 else
   export TF_VAR_enable_grafana="false"
 fi
