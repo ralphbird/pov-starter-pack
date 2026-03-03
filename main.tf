@@ -12,6 +12,10 @@ terraform {
       source  = "pablovarela/slack"
       version = "~> 1.2"
     }
+    grafana = {
+      source  = "grafana/grafana"
+      version = ">= 3.0.0, < 4.0.0"
+    }
   }
 }
 
@@ -24,6 +28,11 @@ provider "pagerduty" {
 provider "slack" {
   # Token is set to "unused" when Slack is disabled to avoid provider validation errors.
   token = var.enable_slack ? var.slack_token : "unused"
+}
+
+provider "grafana" {
+  url  = var.grafana_url != "" ? var.grafana_url : "https://localhost"
+  auth = var.grafana_token != "" ? var.grafana_token : "unused"
 }
 
 ########################################

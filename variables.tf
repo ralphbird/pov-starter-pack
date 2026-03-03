@@ -79,3 +79,33 @@ variable "slack_token" {
   sensitive   = true
 }
 
+variable "enable_grafana" {
+  description = "If true, provision Grafana alert rules for orbipay-frontend."
+  type        = bool
+  default     = false
+}
+
+variable "grafana_url" {
+  description = "Grafana Cloud stack URL (e.g. https://acme.grafana.net)."
+  type        = string
+  default     = ""
+}
+
+variable "grafana_token" {
+  description = "Grafana Cloud service account token with alerting:write, datasources:read."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "grafana_loki_ds_name" {
+  description = "Loki datasource name in Grafana Cloud. Defaults to grafanacloud-<stack>-logs."
+  type        = string
+  default     = ""
+}
+
+variable "grafana_prometheus_ds_name" {
+  description = "Prometheus datasource name in Grafana Cloud. Defaults to grafanacloud-<stack>-prom."
+  type        = string
+  default     = ""
+}
