@@ -85,6 +85,53 @@ else
   export TF_VAR_enable_slack="false"
 fi
 
+# --- Grafana Integration (Optional) ---
+[[ -z "${GRAFANA_ENABLED:-}" && "${TF_VAR_enable_grafana:-}" == "true" ]] && GRAFANA_ENABLED="true"
+if [[ -z "${GRAFANA_ENABLED:-}" ]]; then
+  echo
+  read -r -p "Enable Grafana alert rules? (y/N): " grafana_choice
+  case "$grafana_choice" in
+    y|Y|yes|YES)
+      GRAFANA_ENABLED="true"
+      ;;
+    *)
+      GRAFANA_ENABLED="false"
+      ;;
+  esac
+fi
+
+if [[ "$GRAFANA_ENABLED" == "true" ]]; then
+  if [[ -z "${GRAFANA_URL:-}" ]]; then
+    echo "Enter your Grafana Cloud stack URL."
+    echo "  Example: https://acme.grafana.net"
+    read -r -p "Grafana URL: " GRAFANA_URL
+    if [[ -z "$GRAFANA_URL" ]]; then
+      echo "Error: Grafana URL required when Grafana is enabled." >&2
+      exit 1
+    fi
+    export GRAFANA_URL
+  fi
+
+  if [[ -z "${GRAFANA_TOKEN:-}" ]]; then
+    echo "Enter your Grafana Cloud service account token."
+    echo "  Create one at: grafana.com -> your stack -> Security -> Service accounts"
+    echo "  Required scopes: alerting:write, datasources:read"
+    read -rsp "Grafana Token: " GRAFANA_TOKEN
+    echo
+    if [[ -z "$GRAFANA_TOKEN" ]]; then
+      echo "Error: Grafana token required when Grafana is enabled." >&2
+      exit 1
+    fi
+    export GRAFANA_TOKEN
+  fi
+
+  export TF_VAR_enable_grafana="true"
+  export TF_VAR_grafana_url="$GRAFANA_URL"
+  export TF_VAR_grafana_token="$GRAFANA_TOKEN"
+else
+  export TF_VAR_enable_grafana="false"
+fi
+
 # --- 2. Region Selection ---
 if [[ -z "${PD_REGION:-}" ]]; then
   echo
@@ -232,6 +279,7 @@ if [[ "$MODE" == "destroy" ]]; then
     bash "$(dirname "$0")/create-slack-connections.sh" --destroy
   fi
 
+  echo "-> Grafana alert rules will be destroyed with terraform destroy."
   # Execute Destroy
   echo "-> Destroying Resources..."
   terraform destroy -auto-approve
