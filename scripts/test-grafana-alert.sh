@@ -33,8 +33,8 @@ PAYLOAD=$(jq -n \
   --arg ends   "$ENDS_AT" \
   '[{
     "labels": {
-      "alertname": "orbipay-test-alert",
-      "service":   "orbipay-frontend",
+      "alertname": "orbitpay-test-alert",
+      "service":   "orbitpay-frontend",
       "severity":  "critical",
       "team":      "cx"
     },

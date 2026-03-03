@@ -80,7 +80,7 @@ variable "slack_token" {
 }
 
 variable "enable_grafana" {
-  description = "If true, provision Grafana alert rules for orbipay-frontend."
+  description = "If true, provision Grafana alert rules for orbitpay-frontend."
   type        = bool
   default     = false
 }
