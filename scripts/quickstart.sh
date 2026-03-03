@@ -164,7 +164,7 @@ if [[ "$GRAFANA_ENABLED" == "true" ]]; then
   fi
 
   export TF_VAR_enable_grafana="true"
-  export TF_VAR_grafana_url="$GRAFANA_URL"
+  export TF_VAR_grafana_url="${GRAFANA_URL%/}"
   export TF_VAR_grafana_token="$GRAFANA_TOKEN"
   export TF_VAR_grafana_loki_ds_name="$GRAFANA_LOKI_DS_NAME"
   export TF_VAR_grafana_prometheus_ds_name="$GRAFANA_PROMETHEUS_DS_NAME"
