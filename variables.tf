@@ -92,7 +92,7 @@ variable "grafana_url" {
 }
 
 variable "grafana_token" {
-  description = "Grafana Cloud service account token with alerting:write, datasources:read."
+  description = "Grafana Cloud service account token with alerting:write, datasources:read, folders:creator."
   type        = string
   default     = ""
   sensitive   = true
