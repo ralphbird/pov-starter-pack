@@ -473,11 +473,11 @@ resource "grafana_rule_group" "orbipay_frontend" {
 
 # ── Notification policy ──────────────────────────────────────────────────────
 # Manages the entire Grafana notification policy tree.
-# Sets default to grafana-default-email and adds a nested route for orbipay alerts.
+# Uses orbipay-pagerduty as both the default and the orbipay-specific receiver.
 
 resource "grafana_notification_policy" "main" {
   count         = var.enable_grafana ? 1 : 0
-  contact_point = "grafana-default-email"
+  contact_point = grafana_contact_point.orbipay_pagerduty[0].name
   group_by      = ["grafana_folder", "alertname"]
 
   policy {
