@@ -115,3 +115,15 @@ variable "grafana_tempo_ds_name" {
   type        = string
   default     = ""
 }
+
+variable "enable_rollback_workflow" {
+  description = "If true, create an Incident Workflow to roll back web-frontend to v1.2.0."
+  type        = bool
+  default     = false
+}
+
+variable "rollback_webhook_url" {
+  description = "Base URL of the FastDeploy API (e.g. http://1.2.3.4:8080). Required when enable_rollback_workflow = true."
+  type        = string
+  default     = ""
+}
