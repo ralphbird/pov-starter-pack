@@ -198,8 +198,22 @@ if [[ "$ROLLBACK_ENABLED" == "true" ]]; then
     fi
     export ROLLBACK_WEBHOOK_URL
   fi
+
+  if [[ -z "${ROLLBACK_BASIC_AUTH:-}" ]]; then
+    echo "Enter the FastDeploy basic auth credentials (user:password)."
+    echo "  These are the BASIC_AUTH_USER and BASIC_AUTH_PASSWORD values from orbitpay-web/.env"
+    read -rsp "Basic auth (user:password): " ROLLBACK_BASIC_AUTH
+    echo
+    if [[ -z "$ROLLBACK_BASIC_AUTH" ]]; then
+      echo "Error: Basic auth credentials required when rollback workflow is enabled." >&2
+      exit 1
+    fi
+    export ROLLBACK_BASIC_AUTH
+  fi
+
   export TF_VAR_enable_rollback_workflow="true"
   export TF_VAR_rollback_webhook_url="${ROLLBACK_WEBHOOK_URL%/}"
+  export TF_VAR_rollback_basic_auth="$ROLLBACK_BASIC_AUTH"
 else
   export TF_VAR_enable_rollback_workflow="false"
 fi

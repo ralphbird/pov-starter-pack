@@ -127,3 +127,10 @@ variable "rollback_webhook_url" {
   type        = string
   default     = ""
 }
+
+variable "rollback_basic_auth" {
+  description = "Basic auth credentials for FastDeploy in user:password format. Required when enable_rollback_workflow = true."
+  type        = string
+  default     = ""
+  sensitive   = true
+}

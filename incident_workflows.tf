@@ -21,8 +21,11 @@ resource "pagerduty_incident_workflow" "rollback" {
     }
 
     input {
-      name  = "headers"
-      value = jsonencode([{ key = "Content-Type", value = "application/json" }])
+      name = "headers"
+      value = jsonencode(concat(
+        [{ key = "Content-Type", value = "application/json" }],
+        var.rollback_basic_auth != "" ? [{ key = "Authorization", value = "Basic ${base64encode(var.rollback_basic_auth)}" }] : []
+      ))
     }
 
     input {
