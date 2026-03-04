@@ -131,7 +131,7 @@ if [[ "$GRAFANA_ENABLED" == "true" ]]; then
     GRAFANA_LOKI_DS_NAME=$(curl -sf \
       -H "Authorization: Bearer $GRAFANA_TOKEN" \
       "${GRAFANA_URL%/}/api/datasources" 2>/dev/null \
-      | jq -r '[.[] | select(.type == "loki")] | first | .name // empty' 2>/dev/null || true)
+      | jq -r '[.[] | select(.type == "loki") | select(.name | contains("alert-state-history") | not)] | first | .name // empty' 2>/dev/null || true)
     if [[ -z "$GRAFANA_LOKI_DS_NAME" ]]; then
       echo "Could not auto-detect Loki datasource name."
       echo "  Find it in Grafana -> Connections -> Data sources."

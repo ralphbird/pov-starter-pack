@@ -487,8 +487,8 @@ resource "pagerduty_event_orchestration" "team" {
 }
 
 resource "pagerduty_event_orchestration_router" "team" {
-  for_each            = pagerduty_event_orchestration.team
-  event_orchestration = each.value.id
+  for_each            = local.team_catalog
+  event_orchestration = pagerduty_event_orchestration.team[each.key].id
 
   set {
     id = "start"
@@ -512,8 +512,8 @@ resource "pagerduty_event_orchestration_router" "team" {
 }
 
 resource "pagerduty_event_orchestration_global" "team" {
-  for_each            = pagerduty_event_orchestration.team
-  event_orchestration = each.value.id
+  for_each            = local.team_catalog
+  event_orchestration = pagerduty_event_orchestration.team[each.key].id
 
   set {
     id = "start"
@@ -542,8 +542,8 @@ resource "pagerduty_event_orchestration_global" "team" {
 }
 
 resource "pagerduty_event_orchestration_integration" "team" {
-  for_each            = pagerduty_event_orchestration.team
-  event_orchestration = each.value.id
+  for_each            = local.team_catalog
+  event_orchestration = pagerduty_event_orchestration.team[each.key].id
   label               = "OrbitPay Team Integration - ${local.team_ep_safe_name[each.key]}"
 }
 
