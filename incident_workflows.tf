@@ -33,8 +33,9 @@ resource "pagerduty_incident_workflow" "rollback" {
 }
 
 resource "pagerduty_incident_workflow_trigger" "rollback" {
-  count    = var.enable_rollback_workflow ? 1 : 0
-  type     = "manual"
-  workflow = pagerduty_incident_workflow.rollback[0].id
-  services = [local.ts_id_by_name["Web Frontend (SSR)"]]
+  count                      = var.enable_rollback_workflow ? 1 : 0
+  type                       = "manual"
+  workflow                   = pagerduty_incident_workflow.rollback[0].id
+  subscribed_to_all_services = false
+  services                   = [local.ts_id_by_name["Web Frontend (SSR)"]]
 }
