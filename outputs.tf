@@ -44,7 +44,7 @@ output "slack_channel_ids" {
 }
 
 output "fastdeploy_change_events_routing_key" {
-  description = "Events API v2 routing key for FastDeploy change events"
+  description = "Change events routing key for FastDeploy"
   value       = pagerduty_service_integration.fastdeploy_change_events.integration_key
   sensitive   = true
 }
