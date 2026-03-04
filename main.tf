@@ -263,7 +263,7 @@ resource "pagerduty_service" "orbitpay_ts" {
 resource "pagerduty_service_integration" "fastdeploy_change_events" {
   name    = "FastDeploy Change Events"
   service = pagerduty_service.orbitpay_ts["Web Frontend (SSR)"].id
-  type    = "pagerduty_change_inbound_integration"
+  type    = "events_api_v2_inbound_integration"
 }
 
 ############################
