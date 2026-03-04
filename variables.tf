@@ -109,3 +109,9 @@ variable "grafana_prometheus_ds_name" {
   type        = string
   default     = ""
 }
+
+variable "grafana_tempo_ds_name" {
+  description = "Tempo datasource name in Grafana Cloud. Defaults to grafanacloud-<stack>-traces."
+  type        = string
+  default     = ""
+}

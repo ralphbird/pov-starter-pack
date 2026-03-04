@@ -17,6 +17,11 @@ locals {
     ? var.grafana_prometheus_ds_name
     : "grafanacloud-${local.grafana_stack_slug}-prom"
   )
+  tempo_ds_name = (
+    var.grafana_tempo_ds_name != ""
+    ? var.grafana_tempo_ds_name
+    : "grafanacloud-${local.grafana_stack_slug}-traces"
+  )
 }
 
 # ── Datasource lookups ───────────────────────────────────────────────────────
@@ -29,6 +34,11 @@ data "grafana_data_source" "loki" {
 data "grafana_data_source" "prometheus" {
   count = var.enable_grafana ? 1 : 0
   name  = local.prometheus_ds_name
+}
+
+data "grafana_data_source" "tempo" {
+  count = var.enable_grafana ? 1 : 0
+  name  = local.tempo_ds_name
 }
 
 # ── PagerDuty Events API v2 integration for Web Frontend (SSR) ──────────────
