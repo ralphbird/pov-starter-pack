@@ -42,3 +42,9 @@ output "slack_channel_ids" {
   description = "Slack channel IDs by team code (only populated when enable_slack = true)"
   value       = { for k, v in slack_conversation.team : k => v.id }
 }
+
+output "fastdeploy_change_events_routing_key" {
+  description = "Events API v2 routing key for FastDeploy change events"
+  value       = pagerduty_service_integration.fastdeploy_change_events.integration_key
+  sensitive   = true
+}
