@@ -67,7 +67,7 @@ resource "grafana_dashboard" "orbitpay_frontend" {
         targets = [{
           refId      = "A"
           datasource = { type = "prometheus", uid = local.prom_uid }
-          expr       = "sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\",http_status_code=~\"5..\"}[2m])) / sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\"}[2m])) * 100"
+          expr       = "sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\",http_status_code=~\"5..\"}[2m])) / sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\"}[2m])) * 100 or vector(0)"
         }]
         options = {
           reduceOptions = { calcs = ["lastNotNull"] }
@@ -214,7 +214,7 @@ resource "grafana_dashboard" "orbitpay_frontend" {
         targets = [{
           refId      = "A"
           datasource = { type = "prometheus", uid = local.prom_uid }
-          expr       = "sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\",http_status_code=~\"5..\"}[2m]))"
+          expr       = "sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\",http_status_code=~\"5..\"}[2m])) or sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\"}[2m]) * 0)"
           legendFormat = "5xx rps"
         }]
         fieldConfig = {
