@@ -179,6 +179,7 @@ resource "pagerduty_schedule" "pov_schedule" {
   name      = "${local.team_ep_safe_name[each.key]} Schedule (POV)"
   time_zone = "Etc/UTC"
   description = "Created by POV Starter Pack"
+  teams = [pagerduty_team.team[each.key].id]
   layer {
     name                         = "Always on call"
     start                        = "2023-01-01T00:00:00-00:00"
