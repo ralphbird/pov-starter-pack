@@ -48,3 +48,8 @@ output "fastdeploy_change_events_routing_key" {
   value       = pagerduty_service_integration.fastdeploy_change_events.integration_key
   sensitive   = true
 }
+
+output "rollback_incident_workflow_id" {
+  description = "ID of the rollback Incident Workflow (only set when enable_rollback_workflow = true)"
+  value       = length(pagerduty_incident_workflow.rollback) > 0 ? pagerduty_incident_workflow.rollback[0].id : null
+}
