@@ -172,6 +172,38 @@ else
   export TF_VAR_enable_grafana="false"
 fi
 
+# --- Rollback Incident Workflow (Optional) ---
+[[ -z "${ROLLBACK_ENABLED:-}" && "${TF_VAR_enable_rollback_workflow:-}" == "true" ]] && ROLLBACK_ENABLED="true"
+if [[ -z "${ROLLBACK_ENABLED:-}" ]]; then
+  echo
+  read -r -p "Enable rollback Incident Workflow? (y/N): " rollback_choice
+  case "$rollback_choice" in
+    y|Y|yes|YES)
+      ROLLBACK_ENABLED="true"
+      ;;
+    *)
+      ROLLBACK_ENABLED="false"
+      ;;
+  esac
+fi
+
+if [[ "$ROLLBACK_ENABLED" == "true" ]]; then
+  if [[ -z "${ROLLBACK_WEBHOOK_URL:-}" ]]; then
+    echo "Enter the FastDeploy base URL (EC2 public IP or DNS, port 8080)."
+    echo "  Example: http://1.2.3.4:8080"
+    read -r -p "FastDeploy URL: " ROLLBACK_WEBHOOK_URL
+    if [[ -z "$ROLLBACK_WEBHOOK_URL" ]]; then
+      echo "Error: FastDeploy URL required when rollback workflow is enabled." >&2
+      exit 1
+    fi
+    export ROLLBACK_WEBHOOK_URL
+  fi
+  export TF_VAR_enable_rollback_workflow="true"
+  export TF_VAR_rollback_webhook_url="${ROLLBACK_WEBHOOK_URL%/}"
+else
+  export TF_VAR_enable_rollback_workflow="false"
+fi
+
 # --- 2. Region Selection ---
 if [[ -z "${PD_REGION:-}" ]]; then
   echo
