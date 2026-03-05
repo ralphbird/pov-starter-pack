@@ -302,6 +302,12 @@ resource "pagerduty_service_integration" "fastdeploy_change_events" {
   type    = "events_api_v2_inbound_integration"
 }
 
+resource "pagerduty_service_integration" "web_frontend_incident_events" {
+  name    = "History Seed Events"
+  service = pagerduty_service.orbitpay_ts["Web Frontend (SSR)"].id
+  type    = "events_api_v2_inbound_integration"
+}
+
 ############################
 # Dependencies: Business -> Technical + Technical -> Technical
 ############################

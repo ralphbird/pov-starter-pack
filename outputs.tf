@@ -49,6 +49,12 @@ output "fastdeploy_change_events_routing_key" {
   sensitive   = true
 }
 
+output "web_frontend_incident_routing_key" {
+  description = "Events API v2 routing key for Web Frontend (SSR) incidents"
+  value       = pagerduty_service_integration.web_frontend_incident_events.integration_key
+  sensitive   = true
+}
+
 output "rollback_incident_workflow_id" {
   description = "ID of the rollback Incident Workflow (only set when enable_rollback_workflow = true)"
   value       = length(pagerduty_incident_workflow.rollback) > 0 ? pagerduty_incident_workflow.rollback[0].id : null

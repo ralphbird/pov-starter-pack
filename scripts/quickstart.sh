@@ -17,6 +17,15 @@ else
 fi
 echo "========================================"
 
+# --- Dependency checks ---
+if ! command -v uv &>/dev/null; then
+  echo "[WARN] 'uv' not found — history seeding will be skipped."
+  echo "       Install uv: https://docs.astral.sh/uv/getting-started/installation/"
+  UV_AVAILABLE="false"
+else
+  UV_AVAILABLE="true"
+fi
+
 # --- 1. Credentials ---
 if [[ -z "${PAGERDUTY_TOKEN:-}" ]]; then
   echo "Please enter your PagerDuty API Token."
@@ -517,3 +526,18 @@ echo
 echo "-> FastDeploy Change Events routing key:"
 echo "   (add to orbitpay-web/.env as PD_CHANGE_EVENTS_ROUTING_KEY=<key>)"
 terraform output -raw fastdeploy_change_events_routing_key 2>/dev/null && echo || echo "   (not available — run: terraform output -raw fastdeploy_change_events_routing_key)"
+
+if [[ "$UV_AVAILABLE" == "true" ]]; then
+  echo
+  echo "Seeding 7 days of history for Web Frontend (SSR)..."
+  FASTDEPLOY_KEY=$(terraform output -raw fastdeploy_change_events_routing_key 2>/dev/null || true)
+  INCIDENT_KEY=$(terraform output -raw web_frontend_incident_routing_key 2>/dev/null || true)
+  if [[ -n "$FASTDEPLOY_KEY" && -n "$INCIDENT_KEY" ]]; then
+    uv run "$(dirname "$0")/seed-pagerduty-history.py" \
+      --incident-key "$INCIDENT_KEY" \
+      --change-key "$FASTDEPLOY_KEY" \
+      --region "$PD_REGION"
+  else
+    echo "[WARN] Could not retrieve routing keys — skipping history seeding."
+  fi
+fi
