@@ -148,3 +148,47 @@ resource "pagerduty_incident_workflow_trigger" "major_incident" {
   workflow                   = pagerduty_incident_workflow.major_incident[0].id
   subscribed_to_all_services = true
 }
+
+# Per-incident Slack Channel Workflow — creates a dedicated Slack channel for every
+# incident triggered on Web Frontend (SSR). Gated on var.enable_web_frontend_channel_workflow.
+# Requires var.major_incident_slack_workspace_id to be set.
+
+resource "pagerduty_incident_workflow" "web_frontend_channel" {
+  count       = var.enable_web_frontend_channel_workflow ? 1 : 0
+  name        = "Slack Channel Workflow"
+  description = "Instantly set up communication channels for responders. Automatically name, create, and link Slack channels and conference bridges to the incident."
+
+  step {
+    name   = "Create a Slack Channel for an Incident"
+    action = "pagerduty.com:slack:create-a-channel:4"
+
+    input {
+      name  = "Workspace"
+      value = var.major_incident_slack_workspace_id
+    }
+
+    input {
+      name  = "Channel Name"
+      value = "web_frontend_{{incident.incident_number}}"
+    }
+
+    input {
+      name  = "Channel visibility"
+      value = "Public"
+    }
+
+    input {
+      name  = "Pin incident"
+      value = "Yes"
+    }
+  }
+}
+
+resource "pagerduty_incident_workflow_trigger" "web_frontend_channel" {
+  count                      = var.enable_web_frontend_channel_workflow ? 1 : 0
+  type                       = "conditional"
+  workflow                   = pagerduty_incident_workflow.web_frontend_channel[0].id
+  services                   = [pagerduty_service.orbitpay_ts["Web Frontend (SSR)"].id]
+  condition                  = "incident.status matches 'triggered'"
+  subscribed_to_all_services = false
+}

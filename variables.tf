@@ -140,3 +140,9 @@ variable "rollback_webhook_url" {
   default     = ""
 }
 
+variable "enable_web_frontend_channel_workflow" {
+  description = "If true, create a workflow that automatically creates a dedicated Slack channel for every incident on Web Frontend (SSR)."
+  type        = bool
+  default     = false
+}
+

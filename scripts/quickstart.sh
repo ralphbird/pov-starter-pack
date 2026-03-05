@@ -241,6 +241,46 @@ else
   export TF_VAR_enable_major_incident_workflow="false"
 fi
 
+# --- Per-Incident Slack Channel Workflow for Web Frontend (Optional) ---
+[[ -z "${CHANNEL_WORKFLOW_ENABLED:-}" && "${TF_VAR_enable_web_frontend_channel_workflow:-}" == "true" ]] && CHANNEL_WORKFLOW_ENABLED="true"
+if [[ -z "${CHANNEL_WORKFLOW_ENABLED:-}" ]]; then
+  echo
+  read -r -p "Enable per-incident Slack channel workflow for Web Frontend (SSR)? (y/N): " channel_choice
+  case "$channel_choice" in
+    y|Y|yes|YES)
+      CHANNEL_WORKFLOW_ENABLED="true"
+      ;;
+    *)
+      CHANNEL_WORKFLOW_ENABLED="false"
+      ;;
+  esac
+fi
+
+if [[ "$CHANNEL_WORKFLOW_ENABLED" == "true" ]]; then
+  # Reuse workspace ID already collected by major incident or Slack sections.
+  if [[ -n "${MAJOR_INCIDENT_SLACK_WORKSPACE_ID:-}" ]]; then
+    CHANNEL_WORKFLOW_SLACK_WORKSPACE_ID="$MAJOR_INCIDENT_SLACK_WORKSPACE_ID"
+  elif [[ -n "${SLACK_WORKSPACE_ID:-}" ]]; then
+    CHANNEL_WORKFLOW_SLACK_WORKSPACE_ID="$SLACK_WORKSPACE_ID"
+  fi
+  if [[ -z "${CHANNEL_WORKFLOW_SLACK_WORKSPACE_ID:-}" ]]; then
+    echo "Enter your Slack Workspace ID (T... format) for the per-incident channel workflow."
+    echo "  Found in: PagerDuty -> Integrations -> Slack"
+    read -r -p "Slack Workspace ID: " CHANNEL_WORKFLOW_SLACK_WORKSPACE_ID
+    if [[ -z "$CHANNEL_WORKFLOW_SLACK_WORKSPACE_ID" ]]; then
+      echo "Error: Slack Workspace ID required when per-incident channel workflow is enabled." >&2
+      exit 1
+    fi
+    export CHANNEL_WORKFLOW_SLACK_WORKSPACE_ID
+  fi
+
+  export TF_VAR_enable_web_frontend_channel_workflow="true"
+  # major_incident_slack_workspace_id is the shared Slack workspace var; set it if not already.
+  export TF_VAR_major_incident_slack_workspace_id="${TF_VAR_major_incident_slack_workspace_id:-$CHANNEL_WORKFLOW_SLACK_WORKSPACE_ID}"
+else
+  export TF_VAR_enable_web_frontend_channel_workflow="false"
+fi
+
 # --- 2. Region Selection ---
 if [[ -z "${PD_REGION:-}" ]]; then
   echo
