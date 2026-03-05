@@ -65,11 +65,12 @@ resource "grafana_contact_point" "orbitpay_pagerduty" {
   name  = "orbitpay-pagerduty"
 
   pagerduty {
-    integration_key = pagerduty_service_integration.web_frontend_events_v2[0].integration_key
-    severity        = "critical"
-    class           = "orbitpay-alert"
-    component       = "orbitpay-frontend"
-    group           = "orbitpay"
+    integration_key         = pagerduty_service_integration.web_frontend_events_v2[0].integration_key
+    severity                = "critical"
+    class                   = "orbitpay-alert"
+    component               = "orbitpay-frontend"
+    group                   = "orbitpay"
+    disable_resolve_message = false
   }
 }
 
@@ -81,7 +82,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
   folder_uid       = grafana_folder.orbitpay[0].uid
   interval_seconds = 60
 
-  # Rule 1: 5xx error rate (Loki, critical)
+  # Rule 1: 5xx error rate (Prometheus, critical)
   rule {
     name      = "orbitpay-5xx-error-rate"
     condition = "B"
@@ -102,17 +103,17 @@ resource "grafana_rule_group" "orbitpay_frontend" {
 
     data {
       ref_id         = "A"
-      datasource_uid = data.grafana_data_source.loki[0].uid
-      query_type     = "range"
+      datasource_uid = data.grafana_data_source.prometheus[0].uid
+      query_type     = ""
       relative_time_range {
         from = 300
         to   = 0
       }
       model = jsonencode({
-        datasource = { type = "loki", uid = data.grafana_data_source.loki[0].uid }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus[0].uid }
         editorMode = "code"
-        expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | res_statusCode >= 500 [2m]))"
-        queryType  = "range"
+        expr       = "sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\",http_status_code=~\"5..\"}[2m]))"
+        instant    = true
         refId      = "A"
       })
     }
@@ -138,7 +139,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     }
   }
 
-  # Rule 2: transfer POST error rate (Loki, critical)
+  # Rule 2: transfer POST error rate (Prometheus, critical)
   rule {
     name      = "orbitpay-transfer-error-rate"
     condition = "B"
@@ -159,17 +160,17 @@ resource "grafana_rule_group" "orbitpay_frontend" {
 
     data {
       ref_id         = "A"
-      datasource_uid = data.grafana_data_source.loki[0].uid
-      query_type     = "range"
+      datasource_uid = data.grafana_data_source.prometheus[0].uid
+      query_type     = ""
       relative_time_range {
         from = 300
         to   = 0
       }
       model = jsonencode({
-        datasource = { type = "loki", uid = data.grafana_data_source.loki[0].uid }
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus[0].uid }
         editorMode = "code"
-        expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | req_method=\"POST\" | req_url=\"/transfer\" | res_statusCode >= 400 [2m]))"
-        queryType  = "range"
+        expr       = "sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\",http_route=\"/transfer\",http_status_code=~\"[45]..\"}[2m]))"
+        instant    = true
         refId      = "A"
       })
     }
@@ -439,7 +440,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: heap memory usage exceeds 85%"
+      summary = "orbitpay-frontend: heap memory usage exceeds 99%"
     }
 
     data {
@@ -469,7 +470,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
         datasource = { type = "__expr__", uid = "__expr__" }
         type       = "classic_conditions"
         conditions = [{
-          evaluator = { params = [0.85], type = "gt" }
+          evaluator = { params = [0.99], type = "gt" }
           operator  = { type = "and" }
           query     = { params = ["A"] }
           reducer   = { type = "last" }

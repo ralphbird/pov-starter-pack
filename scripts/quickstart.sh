@@ -450,3 +450,7 @@ echo "========================================"
 echo "   POV Provisioned Successfully!"
 echo "   Workspace: $WORKSPACE"
 echo "========================================"
+echo
+echo "-> FastDeploy Change Events routing key:"
+echo "   (add to orbitpay-web/.env as PD_CHANGE_EVENTS_ROUTING_KEY=<key>)"
+terraform output -raw fastdeploy_change_events_routing_key 2>/dev/null && echo || echo "   (not available — run: terraform output -raw fastdeploy_change_events_routing_key)"

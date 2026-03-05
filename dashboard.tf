@@ -248,11 +248,11 @@ resource "grafana_dashboard" "orbitpay_frontend" {
         type  = "timeseries"
         title = "Transfer Error Rate"
         gridPos = { x = 0, y = 15, w = 12, h = 8 }
-        datasource = { type = "loki", uid = local.loki_uid }
+        datasource = { type = "prometheus", uid = local.prom_uid }
         targets = [{
           refId      = "A"
-          datasource = { type = "loki", uid = local.loki_uid }
-          expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | req_method=\"POST\" | req_url=\"/transfer\" | res_statusCode >= 400 [2m]))"
+          datasource = { type = "prometheus", uid = local.prom_uid }
+          expr       = "sum(rate(http_server_duration_milliseconds_count{service_name=\"orbitpay-frontend\",http_route=\"/transfer\",http_status_code=~\"[45]..\"}[2m])) or vector(0)"
           legendFormat = "error rps"
         }]
         fieldConfig = {
