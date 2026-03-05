@@ -88,7 +88,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     condition = "B"
     for       = "2m"
 
-    no_data_state  = "NoData"
+    no_data_state  = "OK"
     exec_err_state = "Error"
     is_paused      = false
 
@@ -145,7 +145,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     condition = "B"
     for       = "2m"
 
-    no_data_state  = "NoData"
+    no_data_state  = "OK"
     exec_err_state = "Error"
     is_paused      = false
 
@@ -202,7 +202,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     condition = "B"
     for       = "2m"
 
-    no_data_state  = "NoData"
+    no_data_state  = "OK"
     exec_err_state = "Error"
     is_paused      = false
 
@@ -259,7 +259,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     condition = "B"
     for       = "5m"
 
-    no_data_state  = "NoData"
+    no_data_state  = "OK"
     exec_err_state = "Error"
     is_paused      = false
 
@@ -316,7 +316,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     condition = "B"
     for       = "2m"
 
-    no_data_state  = "NoData"
+    no_data_state  = "OK"
     exec_err_state = "Error"
     is_paused      = false
 
@@ -373,7 +373,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     condition = "B"
     for       = "2m"
 
-    no_data_state  = "NoData"
+    no_data_state  = "OK"
     exec_err_state = "Error"
     is_paused      = false
 
@@ -430,7 +430,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
     condition = "B"
     for       = "2m"
 
-    no_data_state  = "NoData"
+    no_data_state  = "OK"
     exec_err_state = "Error"
     is_paused      = false
 
