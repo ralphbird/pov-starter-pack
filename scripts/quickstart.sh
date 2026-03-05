@@ -189,8 +189,8 @@ fi
 
 if [[ "$ROLLBACK_ENABLED" == "true" ]]; then
   if [[ -z "${ROLLBACK_WEBHOOK_URL:-}" ]]; then
-    echo "Enter the FastDeploy base URL (EC2 public IP or DNS, port 8080)."
-    echo "  Example: http://1.2.3.4:8080"
+    echo "Enter the FastDeploy base URL (EC2 public IP or DNS, no trailing slash)."
+    echo "  Example: https://ec2-1-2-3-4.us-west-2.compute.amazonaws.com"
     read -r -p "FastDeploy URL: " ROLLBACK_WEBHOOK_URL
     if [[ -z "$ROLLBACK_WEBHOOK_URL" ]]; then
       echo "Error: FastDeploy URL required when rollback workflow is enabled." >&2
@@ -199,23 +199,46 @@ if [[ "$ROLLBACK_ENABLED" == "true" ]]; then
     export ROLLBACK_WEBHOOK_URL
   fi
 
-  if [[ -z "${ROLLBACK_BASIC_AUTH:-}" ]]; then
-    echo "Enter the FastDeploy basic auth credentials (user:password)."
-    echo "  These are the BASIC_AUTH_USER and BASIC_AUTH_PASSWORD values from orbitpay-web/.env"
-    read -rsp "Basic auth (user:password): " ROLLBACK_BASIC_AUTH
-    echo
-    if [[ -z "$ROLLBACK_BASIC_AUTH" ]]; then
-      echo "Error: Basic auth credentials required when rollback workflow is enabled." >&2
-      exit 1
-    fi
-    export ROLLBACK_BASIC_AUTH
-  fi
-
   export TF_VAR_enable_rollback_workflow="true"
   export TF_VAR_rollback_webhook_url="${ROLLBACK_WEBHOOK_URL%/}"
-  export TF_VAR_rollback_basic_auth="$ROLLBACK_BASIC_AUTH"
 else
   export TF_VAR_enable_rollback_workflow="false"
+fi
+
+# --- Major Incident Workflow (Optional) ---
+[[ -z "${MAJOR_INCIDENT_ENABLED:-}" && "${TF_VAR_enable_major_incident_workflow:-}" == "true" ]] && MAJOR_INCIDENT_ENABLED="true"
+if [[ -z "${MAJOR_INCIDENT_ENABLED:-}" ]]; then
+  echo
+  read -r -p "Enable Major Incident Workflow (Slack + Zoom)? (y/N): " mi_choice
+  case "$mi_choice" in
+    y|Y|yes|YES)
+      MAJOR_INCIDENT_ENABLED="true"
+      ;;
+    *)
+      MAJOR_INCIDENT_ENABLED="false"
+      ;;
+  esac
+fi
+
+if [[ "$MAJOR_INCIDENT_ENABLED" == "true" ]]; then
+  if [[ -n "${SLACK_WORKSPACE_ID:-}" ]]; then
+    MAJOR_INCIDENT_SLACK_WORKSPACE_ID="$SLACK_WORKSPACE_ID"
+  fi
+  if [[ -z "${MAJOR_INCIDENT_SLACK_WORKSPACE_ID:-}" ]]; then
+    echo "Enter your Slack Workspace ID (T... format) for the major incident channel."
+    echo "  Found in: PagerDuty -> Integrations -> Slack"
+    read -r -p "Slack Workspace ID: " MAJOR_INCIDENT_SLACK_WORKSPACE_ID
+    if [[ -z "$MAJOR_INCIDENT_SLACK_WORKSPACE_ID" ]]; then
+      echo "Error: Slack Workspace ID required when major incident workflow is enabled." >&2
+      exit 1
+    fi
+    export MAJOR_INCIDENT_SLACK_WORKSPACE_ID
+  fi
+
+  export TF_VAR_enable_major_incident_workflow="true"
+  export TF_VAR_major_incident_slack_workspace_id="$MAJOR_INCIDENT_SLACK_WORKSPACE_ID"
+else
+  export TF_VAR_enable_major_incident_workflow="false"
 fi
 
 # --- 2. Region Selection ---

@@ -122,15 +122,21 @@ variable "enable_rollback_workflow" {
   default     = false
 }
 
-variable "rollback_webhook_url" {
-  description = "Base URL of the FastDeploy API (e.g. http://1.2.3.4:8080). Required when enable_rollback_workflow = true."
+variable "enable_major_incident_workflow" {
+  description = "If true, create the Major Incident Workflow with Slack and Zoom."
+  type        = bool
+  default     = false
+}
+
+variable "major_incident_slack_workspace_id" {
+  description = "Slack workspace ID (e.g. T0AHENR0LNP) for the Major Incident Workflow. Required when enable_major_incident_workflow = true."
   type        = string
   default     = ""
 }
 
-variable "rollback_basic_auth" {
-  description = "Basic auth credentials for FastDeploy in user:password format. Required when enable_rollback_workflow = true."
+variable "rollback_webhook_url" {
+  description = "Base URL of the FastDeploy API (e.g. https://host:port). Required when enable_rollback_workflow = true."
   type        = string
   default     = ""
-  sensitive   = true
 }
+
