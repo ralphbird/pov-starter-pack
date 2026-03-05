@@ -220,6 +220,42 @@ resource "pagerduty_escalation_policy" "team_ep" {
   }
 }
 
+resource "pagerduty_team" "major_incidents_team" {
+  name        = "Major Incidents"
+  description = "OrbitPay major incidents team (Created by POV Starter Pack)"
+}
+
+resource "pagerduty_schedule" "major_incidents_schedule" {
+  name        = "Major Incidents Schedule (POV)"
+  time_zone   = "Etc/UTC"
+  description = "Created by POV Starter Pack"
+  teams       = [pagerduty_team.major_incidents_team.id]
+
+  layer {
+    name                         = "Always on call"
+    start                        = "2023-01-01T00:00:00-00:00"
+    rotation_virtual_start       = "2023-01-01T00:00:00-00:00"
+    rotation_turn_length_seconds = 86400
+    users                        = var.pov_user_email != null ? [data.pagerduty_user.pov_user[0].id] : ["P000000"]
+  }
+}
+
+resource "pagerduty_escalation_policy" "major_incidents_ep" {
+  name        = "Major Incidents EP"
+  description = "Escalation policy for major incidents (Created by POV Starter Pack)"
+  num_loops   = 2
+  teams       = [pagerduty_team.major_incidents_team.id]
+
+  rule {
+    escalation_delay_in_minutes = var.default_escalation_delay
+
+    target {
+      type = "schedule_reference"
+      id   = pagerduty_schedule.major_incidents_schedule.id
+    }
+  }
+}
+
 ############################
 # Business Services
 ############################
