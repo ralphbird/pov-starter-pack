@@ -397,7 +397,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       model = jsonencode({
         datasource = { type = "loki", uid = data.grafana_data_source.loki[0].uid }
         editorMode = "code"
-        expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | level =~ \"error|warn\" [2m]))"
+        expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | severity =~ \"error|warn\" [2m]))"
         queryType  = "range"
         refId      = "A"
       })

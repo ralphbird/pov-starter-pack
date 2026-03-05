@@ -390,7 +390,7 @@ resource "grafana_dashboard" "orbitpay_frontend" {
         targets = [{
           refId      = "A"
           datasource = { type = "loki", uid = local.loki_uid }
-          expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | level =~ \"error|warn\" [2m]))"
+          expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | severity =~ \"error|warn\" [2m]))"
           legendFormat = "error/warn rps"
         }]
         fieldConfig = {
@@ -419,7 +419,7 @@ resource "grafana_dashboard" "orbitpay_frontend" {
         targets = [{
           refId      = "A"
           datasource = { type = "loki", uid = local.loki_uid }
-          expr      = "{service_name=\"orbitpay-frontend\"} | json | level =~ \"error|warn\""
+          expr      = "{service_name=\"orbitpay-frontend\"} | json | severity =~ \"error|warn\""
           queryType = "range"
         }]
         options = {
