@@ -146,3 +146,8 @@ variable "enable_web_frontend_channel_workflow" {
   default     = false
 }
 
+variable "business_service_subscriber_emails" {
+  description = "List of PagerDuty user emails to subscribe to all OrbitPay business services."
+  type        = list(string)
+  default     = []
+}

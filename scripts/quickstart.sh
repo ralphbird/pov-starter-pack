@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/../.env"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "$ENV_FILE"
+  set +a
+fi
+
 # OrbitPay POV Provisioner
 # - Interactive wizard to spin up or tear down a POV environment
 
@@ -320,6 +329,18 @@ else
 fi
 export PD_REGION
 export TF_VAR_pagerduty_api_url_override="$API_BASE_URL"
+
+# --- Business Service Subscriber Emails (Optional) ---
+if [[ -n "${BUSINESS_SERVICE_SUBSCRIBER_EMAILS:-}" ]]; then
+  TF_VAR_business_service_subscriber_emails=$(
+    echo "$BUSINESS_SERVICE_SUBSCRIBER_EMAILS" \
+    | tr ',' '\n' \
+    | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+    | jq -R . \
+    | jq -sc .
+  )
+  export TF_VAR_business_service_subscriber_emails
+fi
 
 # --- 3. Domain Check ---
 # (Verify connectivity to ensure valid token)

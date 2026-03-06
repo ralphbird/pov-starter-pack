@@ -266,6 +266,30 @@ resource "pagerduty_business_service" "orbitpay_bs" {
   description = "OrbitPay synthetic business service: ${each.key} (Created by POV Starter Pack)"
 }
 
+data "pagerduty_user" "bs_subscriber" {
+  for_each = toset(var.business_service_subscriber_emails)
+  email    = each.key
+}
+
+locals {
+  bs_subscriber_pairs = {
+    for pair in setproduct(
+      toset(var.business_service_subscriber_emails),
+      toset(local.business_services)
+    ) : "${pair[0]}::${pair[1]}" => {
+      email   = pair[0]
+      bs_name = pair[1]
+    }
+  }
+}
+
+resource "pagerduty_business_service_subscriber" "email_subscribers" {
+  for_each            = local.bs_subscriber_pairs
+  subscriber_id       = data.pagerduty_user.bs_subscriber[each.value.email].id
+  subscriber_type     = "user"
+  business_service_id = pagerduty_business_service.orbitpay_bs[each.value.bs_name].id
+}
+
 ############################
 # Technical Services
 ############################
