@@ -22,6 +22,8 @@ locals {
     ? var.grafana_tempo_ds_name
     : "grafanacloud-${local.grafana_stack_slug}-traces"
   )
+  frontend_dashboard_url     = "${var.grafana_url}/d/orbitpay-frontend"
+  payments_api_dashboard_url = "${var.grafana_url}/d/payments-api-gateway"
 }
 
 # ── Datasource lookups ───────────────────────────────────────────────────────
@@ -123,7 +125,8 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: HTTP 5xx error rate exceeds 0.05 rps"
+      summary       = "orbitpay-frontend: HTTP 5xx error rate exceeds 0.05 rps"
+      dashboard_url = local.frontend_dashboard_url
     }
 
     data {
@@ -180,7 +183,8 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: POST /transfer errors detected — payment path degraded"
+      summary       = "orbitpay-frontend: POST /transfer errors detected — payment path degraded"
+      dashboard_url = local.frontend_dashboard_url
     }
 
     data {
@@ -237,7 +241,8 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: p99 request latency exceeds 2000ms"
+      summary       = "orbitpay-frontend: p99 request latency exceeds 2000ms"
+      dashboard_url = local.frontend_dashboard_url
     }
 
     data {
@@ -294,7 +299,8 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: no metrics received for 5 minutes — service may be down"
+      summary       = "orbitpay-frontend: no metrics received for 5 minutes — service may be down"
+      dashboard_url = local.frontend_dashboard_url
     }
 
     data {
@@ -351,7 +357,8 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: Node.js event loop lag exceeds 100ms"
+      summary       = "orbitpay-frontend: Node.js event loop lag exceeds 100ms"
+      dashboard_url = local.frontend_dashboard_url
     }
 
     data {
@@ -408,7 +415,8 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: application error/warn log rate elevated"
+      summary       = "orbitpay-frontend: application error/warn log rate elevated"
+      dashboard_url = local.frontend_dashboard_url
     }
 
     data {
@@ -465,7 +473,8 @@ resource "grafana_rule_group" "orbitpay_frontend" {
       team     = "cx"
     }
     annotations = {
-      summary = "orbitpay-frontend: heap memory usage exceeds 99%"
+      summary       = "orbitpay-frontend: heap memory usage exceeds 99%"
+      dashboard_url = local.frontend_dashboard_url
     }
 
     data {
@@ -531,7 +540,8 @@ resource "grafana_rule_group" "payments_api_gateway" {
       team     = "payments"
     }
     annotations = {
-      summary = "payments-api-gateway: HTTP 5xx error rate exceeds 5%"
+      summary       = "payments-api-gateway: HTTP 5xx error rate exceeds 5%"
+      dashboard_url = local.payments_api_dashboard_url
     }
 
     data {
@@ -588,7 +598,8 @@ resource "grafana_rule_group" "payments_api_gateway" {
       team     = "payments"
     }
     annotations = {
-      summary = "payments-api-gateway: p99 request latency exceeds 1s"
+      summary       = "payments-api-gateway: p99 request latency exceeds 1s"
+      dashboard_url = local.payments_api_dashboard_url
     }
 
     data {
