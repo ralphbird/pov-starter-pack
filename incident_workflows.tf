@@ -66,6 +66,16 @@ resource "pagerduty_incident_workflow" "major_incident" {
   description = "Create a dedicated incident Slack channel and Zoom conference bridge to drive collaboration and incident management. Automate your response process and ensure responders have what they need to start collaborating."
 
   step {
+    name   = "Set Priority to P1"
+    action = "pagerduty.com:incident-workflows:update-incident-priority:1"
+
+    input {
+      name  = "Priority"
+      value = "P1"
+    }
+  }
+
+  step {
     name   = "Create a Zoom Meeting"
     action = "pagerduty.com:zoom:create-zoom-meeting:1"
   }
@@ -111,7 +121,7 @@ resource "pagerduty_incident_workflow" "major_incident" {
 
     input {
       name  = "Message"
-      value = ":fire: -- major incident declared!\nTo start response:\n- Ensure the priority is set\n- Assign the  Incident commander role\n- Page responders from impacted teams"
+      value = ":fire: -- major incident declared!\nTo start response:\n- Assign the incident commander role (IC has been paged)\n- Page responders from impacted teams"
     }
 
     input {
