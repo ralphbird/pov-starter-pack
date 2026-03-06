@@ -80,13 +80,13 @@ resource "grafana_rule_group" "orbitpay_frontend" {
   count            = var.enable_grafana ? 1 : 0
   name             = "orbitpay-frontend"
   folder_uid       = grafana_folder.orbitpay[0].uid
-  interval_seconds = 60
+  interval_seconds = 30
 
   # Rule 1: 5xx error rate (Prometheus, critical)
   rule {
     name      = "orbitpay-5xx-error-rate"
     condition = "B"
-    for       = "2m"
+    for       = "30s"
 
     no_data_state  = "OK"
     exec_err_state = "Error"
@@ -143,7 +143,7 @@ resource "grafana_rule_group" "orbitpay_frontend" {
   rule {
     name      = "orbitpay-transfer-error-rate"
     condition = "B"
-    for       = "2m"
+    for       = "30s"
 
     no_data_state  = "OK"
     exec_err_state = "Error"
@@ -494,7 +494,7 @@ resource "grafana_notification_policy" "main" {
   policy {
     contact_point   = grafana_contact_point.orbitpay_pagerduty[0].name
     group_by        = ["alertname"]
-    group_wait      = "30s"
+    group_wait      = "10s"
     group_interval  = "5m"
     repeat_interval = "4h"
 
