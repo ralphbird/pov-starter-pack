@@ -390,12 +390,12 @@ resource "grafana_dashboard" "orbitpay_frontend" {
         targets = [{
           refId      = "A"
           datasource = { type = "loki", uid = local.loki_uid }
-          expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | severity =~ \"error|warn\" [2m]))"
-          legendFormat = "error/warn rps"
+          expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | severity =~ \"error|warn\" [2m])) / sum(rate({service_name=\"orbitpay-frontend\"} | json [2m]))"
+          legendFormat = "error/warn fraction"
         }]
         fieldConfig = {
           defaults = {
-            unit = "reqps"
+            unit = "percentunit"
             thresholds = {
               mode = "absolute"
               steps = [
