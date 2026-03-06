@@ -55,6 +55,12 @@ output "web_frontend_incident_routing_key" {
   sensitive   = true
 }
 
+output "payments_api_gateway_incident_routing_key" {
+  description = "Events API v2 routing key for Payments API Gateway incidents (Grafana)"
+  value       = length(pagerduty_service_integration.payments_api_gateway_events_v2) > 0 ? pagerduty_service_integration.payments_api_gateway_events_v2[0].integration_key : null
+  sensitive   = true
+}
+
 output "rollback_incident_workflow_id" {
   description = "ID of the rollback Incident Workflow (only set when enable_rollback_workflow = true)"
   value       = length(pagerduty_incident_workflow.rollback) > 0 ? pagerduty_incident_workflow.rollback[0].id : null

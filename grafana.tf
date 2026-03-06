@@ -50,6 +50,15 @@ resource "pagerduty_service_integration" "web_frontend_events_v2" {
   type    = "events_api_v2_inbound_integration"
 }
 
+# ── PagerDuty Events API v2 integration for Payments API Gateway ─────────────
+
+resource "pagerduty_service_integration" "payments_api_gateway_events_v2" {
+  count   = var.enable_grafana ? 1 : 0
+  name    = "Grafana Alerts"
+  service = pagerduty_service.orbitpay_ts["Payments API Gateway"].id
+  type    = "events_api_v2_inbound_integration"
+}
+
 # ── Grafana folder ───────────────────────────────────────────────────────────
 
 resource "grafana_folder" "orbitpay" {
@@ -69,6 +78,22 @@ resource "grafana_contact_point" "orbitpay_pagerduty" {
     severity                = "critical"
     class                   = "orbitpay-alert"
     component               = "orbitpay-frontend"
+    group                   = "orbitpay"
+    disable_resolve_message = false
+  }
+}
+
+# ── Contact point (Payments API Gateway) ──────────────────────────────────────
+
+resource "grafana_contact_point" "payments_api_pagerduty" {
+  count = var.enable_grafana ? 1 : 0
+  name  = "payments-api-pagerduty"
+
+  pagerduty {
+    integration_key         = pagerduty_service_integration.payments_api_gateway_events_v2[0].integration_key
+    severity                = "critical"
+    class                   = "orbitpay-alert"
+    component               = "payments-api-gateway"
     group                   = "orbitpay"
     disable_resolve_message = false
   }
@@ -482,6 +507,129 @@ resource "grafana_rule_group" "orbitpay_frontend" {
   }
 }
 
+# ── Alert rule group (Payments API Gateway) ──────────────────────────────────
+
+resource "grafana_rule_group" "payments_api_gateway" {
+  count            = var.enable_grafana ? 1 : 0
+  name             = "payments-api-gateway"
+  folder_uid       = grafana_folder.orbitpay[0].uid
+  interval_seconds = 30
+
+  # Rule 1: 5xx error rate (Prometheus, critical)
+  rule {
+    name      = "payments-api-5xx-error-rate"
+    condition = "B"
+    for       = "30s"
+
+    no_data_state  = "OK"
+    exec_err_state = "Error"
+    is_paused      = false
+
+    labels = {
+      severity = "critical"
+      service  = "payments-api-gateway"
+      team     = "payments"
+    }
+    annotations = {
+      summary = "payments-api-gateway: HTTP 5xx error rate exceeds 5%"
+    }
+
+    data {
+      ref_id         = "A"
+      datasource_uid = data.grafana_data_source.prometheus[0].uid
+      query_type     = ""
+      relative_time_range {
+        from = 300
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus[0].uid }
+        editorMode = "code"
+        expr       = "sum(rate(http_server_request_duration_seconds_count{service_name=\"payments-api-gateway\",http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_request_duration_seconds_count{service_name=\"payments-api-gateway\"}[5m]))"
+        instant    = true
+        refId      = "A"
+      })
+    }
+    data {
+      ref_id         = "B"
+      datasource_uid = "__expr__"
+      relative_time_range {
+        from = 300
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "__expr__", uid = "__expr__" }
+        type       = "classic_conditions"
+        conditions = [{
+          evaluator = { params = [0.05], type = "gt" }
+          operator  = { type = "and" }
+          query     = { params = ["A"] }
+          reducer   = { type = "last" }
+          type      = "query"
+        }]
+        refId = "B"
+      })
+    }
+  }
+
+  # Rule 2: p99 latency (Prometheus, warning)
+  rule {
+    name      = "payments-api-p99-latency"
+    condition = "B"
+    for       = "2m"
+
+    no_data_state  = "OK"
+    exec_err_state = "Error"
+    is_paused      = false
+
+    labels = {
+      severity = "warning"
+      service  = "payments-api-gateway"
+      team     = "payments"
+    }
+    annotations = {
+      summary = "payments-api-gateway: p99 request latency exceeds 1s"
+    }
+
+    data {
+      ref_id         = "A"
+      datasource_uid = data.grafana_data_source.prometheus[0].uid
+      query_type     = ""
+      relative_time_range {
+        from = 300
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "prometheus", uid = data.grafana_data_source.prometheus[0].uid }
+        editorMode = "code"
+        expr       = "histogram_quantile(0.99, rate(http_server_request_duration_seconds_bucket{service_name=\"payments-api-gateway\"}[5m]))"
+        instant    = true
+        refId      = "A"
+      })
+    }
+    data {
+      ref_id         = "B"
+      datasource_uid = "__expr__"
+      relative_time_range {
+        from = 300
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "__expr__", uid = "__expr__" }
+        type       = "classic_conditions"
+        conditions = [{
+          evaluator = { params = [1.0], type = "gt" }
+          operator  = { type = "and" }
+          query     = { params = ["A"] }
+          reducer   = { type = "last" }
+          type      = "query"
+        }]
+        refId = "B"
+      })
+    }
+  }
+}
+
 # ── Notification policy ──────────────────────────────────────────────────────
 # Manages the entire Grafana notification policy tree.
 # Uses orbitpay-pagerduty as both the default and the orbitpay-specific receiver.
@@ -502,6 +650,20 @@ resource "grafana_notification_policy" "main" {
       label = "service"
       match = "="
       value = "orbitpay-frontend"
+    }
+  }
+
+  policy {
+    contact_point   = grafana_contact_point.payments_api_pagerduty[0].name
+    group_by        = ["alertname"]
+    group_wait      = "10s"
+    group_interval  = "5m"
+    repeat_interval = "4h"
+
+    matcher {
+      label = "service"
+      match = "="
+      value = "payments-api-gateway"
     }
   }
 }

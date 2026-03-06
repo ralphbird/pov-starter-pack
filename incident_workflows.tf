@@ -29,6 +29,34 @@ resource "pagerduty_incident_workflow_trigger" "rollback" {
   subscribed_to_all_services = true
 }
 
+resource "pagerduty_incident_workflow" "rollback_payments_api" {
+  count       = var.enable_rollback_workflow ? 1 : 0
+  name        = "OrbitPay — Rollback Payments API Gateway"
+  description = "Rolls back the payments API gateway to the previous version"
+
+  step {
+    name   = "Send a Webhook POST"
+    action = "pagerduty.com:http-api:send-webhook-post:1"
+
+    input {
+      name  = "URL"
+      value = "${var.rollback_webhook_url}/api/services/web-frontend/rollback"
+    }
+
+    input {
+      name  = "Headers"
+      value = "Content-Type: application/json"
+    }
+  }
+}
+
+resource "pagerduty_incident_workflow_trigger" "rollback_payments_api" {
+  count                      = var.enable_rollback_workflow ? 1 : 0
+  type                       = "manual"
+  workflow                   = pagerduty_incident_workflow.rollback_payments_api[0].id
+  subscribed_to_all_services = true
+}
+
 # Major Incident Workflow — Slack channel notification and Zoom conference bridge.
 # Gated on var.enable_major_incident_workflow.
 
