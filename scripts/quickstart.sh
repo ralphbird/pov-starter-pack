@@ -541,3 +541,49 @@ if [[ "$UV_AVAILABLE" == "true" ]]; then
     echo "[WARN] Could not retrieve routing keys — skipping history seeding."
   fi
 fi
+
+# --- Seed Grafana telemetry (metrics, logs, traces) ---
+if [[ "$UV_AVAILABLE" == "true" && "$GRAFANA_ENABLED" == "true" ]]; then
+  HAS_GRAFANA_CREDS="false"
+  if [[ -n "${ALLOY_URL:-}" || -n "${LOKI_URL:-}" || -n "${TEMPO_URL:-}" ]]; then
+    HAS_GRAFANA_CREDS="true"
+  fi
+
+  if [[ "$HAS_GRAFANA_CREDS" == "true" ]]; then
+    echo
+    read -r -p "Seed 24h of Grafana telemetry (metrics, logs, traces)? (y/N): " seed_choice
+    case "$seed_choice" in
+      y|Y|yes|YES)
+        SCRIPT_DIR="$(dirname "$0")"
+
+        if [[ -n "${ALLOY_URL:-}" && -n "${ALLOY_USERNAME:-}" && -n "${ALLOY_API_KEY:-}" ]]; then
+          echo
+          echo "Seeding 24h of Prometheus metrics..."
+          uv run "$SCRIPT_DIR/seed-metrics.py"
+        else
+          echo "[WARN] Missing ALLOY_URL/ALLOY_USERNAME/ALLOY_API_KEY — skipping metrics."
+        fi
+
+        if [[ -n "${LOKI_URL:-}" && -n "${LOKI_USERNAME:-}" && -n "${LOKI_API_KEY:-}" ]]; then
+          echo
+          echo "Seeding 24h of Loki logs..."
+          uv run "$SCRIPT_DIR/seed-logs.py"
+        else
+          echo "[WARN] Missing LOKI_URL/LOKI_USERNAME/LOKI_API_KEY — skipping logs."
+        fi
+
+        if [[ -n "${TEMPO_URL:-}" && -n "${TEMPO_USERNAME:-}" && -n "${TEMPO_API_KEY:-}" ]]; then
+          echo
+          echo "Seeding 24h of Tempo traces..."
+          uv run "$SCRIPT_DIR/seed-traces.py"
+        else
+          echo "[WARN] Missing TEMPO_URL/TEMPO_USERNAME/TEMPO_API_KEY — skipping traces."
+        fi
+        ;;
+    esac
+  else
+    echo
+    echo "[INFO] To seed Grafana telemetry, set LOKI_URL/ALLOY_URL/TEMPO_URL (+ USERNAME/API_KEY)"
+    echo "       in the environment and re-run quickstart.sh."
+  fi
+fi
