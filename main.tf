@@ -178,7 +178,7 @@ resource "pagerduty_schedule" "pov_schedule" {
   for_each  = local.create_schedules ? local.team_catalog : {}
   name      = "${local.team_ep_safe_name[each.key]} Schedule (POV)"
   time_zone = "Etc/UTC"
-  description = "Created by POV Starter Pack"
+  description = "On-call schedule for ${each.value}"
   teams = [pagerduty_team.team[each.key].id]
   layer {
     name                         = "Always on call"
@@ -200,13 +200,13 @@ locals {
 resource "pagerduty_team" "team" {
   for_each    = local.team_catalog
   name        = local.team_ep_safe_name[each.key]
-  description = "OrbitPay synthetic team: ${each.value} (Created by POV Starter Pack)"
+  description = "OrbitPay ${each.value} team"
 }
 
 resource "pagerduty_escalation_policy" "team_ep" {
   for_each    = local.team_catalog
   name        = "${local.team_ep_safe_name[each.key]} EP"
-  description = "Escalation policy for ${each.value} (Created by POV Starter Pack)"
+  description = "Escalation policy for ${each.value}"
   num_loops   = 2
   teams       = [pagerduty_team.team[each.key].id]
 
@@ -222,13 +222,13 @@ resource "pagerduty_escalation_policy" "team_ep" {
 
 resource "pagerduty_team" "major_incidents_team" {
   name        = "Major Incidents"
-  description = "OrbitPay major incidents team (Created by POV Starter Pack)"
+  description = "OrbitPay major incidents team"
 }
 
 resource "pagerduty_schedule" "major_incidents_schedule" {
   name        = "Major Incidents Schedule (POV)"
   time_zone   = "Etc/UTC"
-  description = "Created by POV Starter Pack"
+  description = "On-call schedule for major incidents"
   teams       = [pagerduty_team.major_incidents_team.id]
 
   layer {
@@ -242,7 +242,7 @@ resource "pagerduty_schedule" "major_incidents_schedule" {
 
 resource "pagerduty_escalation_policy" "major_incidents_ep" {
   name        = "Major Incidents EP"
-  description = "Escalation policy for major incidents (Created by POV Starter Pack)"
+  description = "Escalation policy for major incidents"
   num_loops   = 2
   teams       = [pagerduty_team.major_incidents_team.id]
 
@@ -263,7 +263,7 @@ resource "pagerduty_escalation_policy" "major_incidents_ep" {
 resource "pagerduty_business_service" "orbitpay_bs" {
   for_each    = toset(local.business_services)
   name        = each.key
-  description = "OrbitPay synthetic business service: ${each.key} (Created by POV Starter Pack)"
+  description = "OrbitPay ${each.key} business service"
 }
 
 data "pagerduty_user" "bs_subscriber" {
@@ -297,7 +297,7 @@ resource "pagerduty_business_service_subscriber" "email_subscribers" {
 resource "pagerduty_service" "orbitpay_ts" {
   for_each                = local.technical_services
   name                    = each.key
-  description             = "OrbitPay synthetic technical service: ${each.key} (Created by POV Starter Pack)"
+  description             = "OrbitPay ${each.key} technical service"
   escalation_policy       = pagerduty_escalation_policy.team_ep[each.value.team].id
   alert_creation          = "create_alerts_and_incidents"
   auto_resolve_timeout    = 0
@@ -312,6 +312,22 @@ resource "pagerduty_service" "orbitpay_ts" {
   # Enable Auto Pause Notifications for 5 minutes (300 seconds)
   auto_pause_notifications_parameters {
     enabled = true
+    timeout = 300
+  }
+}
+
+############################
+# Alert Grouping: Time-based 5m
+############################
+
+resource "pagerduty_alert_grouping_setting" "time_5m" {
+  for_each    = local.technical_services
+  name        = "${each.key} Time Grouping"
+  description = "Time-based alert grouping - 5 minutes"
+  type        = "time"
+  services    = [pagerduty_service.orbitpay_ts[each.key].id]
+
+  config {
     timeout = 300
   }
 }
@@ -400,7 +416,7 @@ locals {
 
 resource "pagerduty_event_orchestration" "global" {
   name        = "OrbitPay Operations Global"
-  description = "Created by POV Starter Pack"
+  description = "Global event orchestration for OrbitPay operations"
 }
 
 resource "pagerduty_event_orchestration_router" "global" {
@@ -507,7 +523,7 @@ resource "pagerduty_incident_type_custom_field" "customer_journey_impacted" {
   count         = var.base_incident_type_id != "" ? 1 : 0
   data_type     = "boolean"
   default_value = jsonencode(false)
-  description   = "Created by POV Starter Pack"
+  description   = "Indicates whether a customer journey is impacted"
   display_name  = "Customer Journey Impacted"
   enabled       = true
   field_options = null
@@ -520,7 +536,7 @@ resource "pagerduty_incident_type_custom_field" "propose_major_incident" {
   count         = var.base_incident_type_id != "" ? 1 : 0
   data_type     = "string"
   default_value = jsonencode("NO")
-  description   = "Set to yes to kick off Major Incident workflow (Created by POV Starter Pack)"
+  description   = "Set to yes to kick off Major Incident workflow"
   display_name  = "Propose Major Incident"
   enabled       = true
   field_options = ["NO", "YES"]
@@ -559,7 +575,7 @@ locals {
 resource "pagerduty_event_orchestration" "team" {
   for_each    = local.team_catalog
   name        = "OrbitPay Team - ${local.team_ep_safe_name[each.key]}"
-  description = "Created by POV Starter Pack"
+  description = "Event orchestration for ${each.value}"
 }
 
 resource "pagerduty_event_orchestration_router" "team" {
@@ -632,7 +648,7 @@ resource "pagerduty_service_custom_field" "criticality" {
 
   name         = "criticality"
   display_name = "Criticality"
-  description  = "Service criticality. (Created by POV Starter Pack)"
+  description  = "Service criticality."
   field_type   = "single_value_fixed"
   data_type    = "string"
 
@@ -655,7 +671,7 @@ resource "pagerduty_service_custom_field" "service_tier" {
 
   name         = "service_tier"
   display_name = "Service Tier"
-  description  = "Service tiering. (Created by POV Starter Pack)"
+  description  = "Service tiering."
   field_type   = "single_value_fixed"
   data_type    = "string"
 
@@ -678,7 +694,7 @@ resource "pagerduty_service_custom_field" "environment" {
 
   name         = "environment"
   display_name = "Environment"
-  description  = "Service environment. (Created by POV Starter Pack)"
+  description  = "Service environment."
   field_type   = "single_value_fixed"
   data_type    = "string"
 
