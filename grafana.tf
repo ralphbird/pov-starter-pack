@@ -639,6 +639,64 @@ resource "grafana_rule_group" "payments_api_gateway" {
       })
     }
   }
+
+  # Rule 3: upstream callers report gateway connection pool errors (Loki, critical)
+  rule {
+    name      = "payments-api-connection-pool-errors"
+    condition = "B"
+    for       = "30s"
+
+    no_data_state  = "OK"
+    exec_err_state = "Error"
+    is_paused      = false
+
+    labels = {
+      severity = "critical"
+      service  = "payments-api-gateway"
+      team     = "payments"
+    }
+    annotations = {
+      summary       = "payments-api-gateway: connection pool errors detected — callers report timeouts and pool exhaustion"
+      dashboard_url = local.payments_api_dashboard_url
+    }
+
+    data {
+      ref_id         = "A"
+      datasource_uid = data.grafana_data_source.loki[0].uid
+      query_type     = "range"
+      relative_time_range {
+        from = 300
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "loki", uid = data.grafana_data_source.loki[0].uid }
+        editorMode = "code"
+        expr       = "sum(rate({service_name=\"orbitpay-frontend\"} | json | msg=~\".*payments-api-gateway.*(timeout|exhausted|pool).*\" [2m]))"
+        queryType  = "range"
+        refId      = "A"
+      })
+    }
+    data {
+      ref_id         = "B"
+      datasource_uid = "__expr__"
+      relative_time_range {
+        from = 300
+        to   = 0
+      }
+      model = jsonencode({
+        datasource = { type = "__expr__", uid = "__expr__" }
+        type       = "classic_conditions"
+        conditions = [{
+          evaluator = { params = [0], type = "gt" }
+          operator  = { type = "and" }
+          query     = { params = ["A"] }
+          reducer   = { type = "last" }
+          type      = "query"
+        }]
+        refId = "B"
+      })
+    }
+  }
 }
 
 # ── Notification policy ──────────────────────────────────────────────────────
